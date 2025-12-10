@@ -1,0 +1,274 @@
+name: Test BDY Setup
+
+on: [push, workflow_dispatch]
+
+jobs:
+  test-setup-prod:
+    name: Install from prod channel (latest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@master
+        with:
+          env: 'prod'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-setup-master:
+    name: Install from master channel (latest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@master
+        with:
+          env: 'stage'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-setup-beta:
+    name: Install from beta channel (latest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@master
+        with:
+          env: 'beta'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-setup-stage:
+    name: Install from stage channel (latest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@master
+        with:
+          env: 'stage'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-setup-dev:
+    name: Install from dev channel (latest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@master
+        with:
+          env: 'dev'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-setup-npm:
+    name: Setup BDY CLI (via NPM)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@master
+        with:
+          installation_method: 'npm'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-setup-apt:
+    name: Setup BDY CLI (via APT)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@master
+        with:
+          installation_method: 'apt'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-setup-specific-version:
+    name: Install specific version (1.12.8)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@master
+        with:
+          version: '1.12.8'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+          echo ""
+          echo "Expected: 1.12.8"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-invalid-method:
+    name: Test invalid installation method (should fail)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI with invalid method
+        id: setup-invalid
+        continue-on-error: true
+        uses: buddy/setup@master
+        with:
+          installation_method: 'invalid-method'
+
+      - name: Verify error handling
+        run: |
+          if [ "${{ steps.setup-invalid.outcome }}" == "failure" ]; then
+            echo "✅ Action correctly failed with invalid installation method"
+            exit 0
+          else
+            echo "❌ Action should have failed but succeeded"
+            exit 1
+          fi
+
+  test-invalid-version:
+    name: Test non-existent version (should fail)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI with invalid version
+        id: setup-invalid-version
+        continue-on-error: true
+        uses: buddy/setup@master
+        with:
+          version: '999.999.999'
+
+      - name: Verify error handling
+        run: |
+          if [ "${{ steps.setup-invalid-version.outcome }}" == "failure" ]; then
+            echo "✅ Action correctly failed with non-existent version"
+            exit 0
+          else
+            echo "❌ Action should have failed but succeeded"
+            exit 1
+          fi
