@@ -1,0 +1,30 @@
+name: 'Buddy Setup'
+description: 'Install BDY CLI for Buddy CI/CD platform'
+author: 'Marcel Gańczarczyk'
+runs:
+  using: 'node24'
+  main: 'dist/index.js'
+inputs:
+  env:
+    description: 'BDY CLI environment channel (e.g., prod). Defaults to prod.'
+    default: 'prod'
+    required: false
+  version:
+    description: 'BDY CLI version to install (e.g., 1.16.4). If not specified, fetches latest from the specified env channel.'
+    required: false
+  installation_method:
+    description: 'Installation method: download, apt, or npm. Defaults to download.'
+    default: 'download'
+    required: false
+  skip_if_installed:
+    description: 'Skip installation if BDY CLI is already installed'
+    default: 'true'
+    required: false
+outputs:
+  bdy_version:
+    description: 'The installed BDY CLI version'
+  bdy_path:
+    description: 'Path to the BDY CLI binary'
+branding:
+  icon: 'download'
+  color: 'blue'

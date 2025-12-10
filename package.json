@@ -1,0 +1,43 @@
+{
+  "name": "setup",
+  "version": "1.0.0",
+  "description": "GitHub Action for installing BDY CLI for Buddy CI/CD",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "pnpm lint && esbuild src/index.ts --bundle --platform=node --target=node24 --minify --outdir=./dist",
+    "start": "act --secret-file .github/.secrets --env-file .github/.env",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:types": "tsc --skipLibCheck --noEmit",
+    "test": "pnpm lint && pnpm lint:types && pnpm build && pnpm start"
+  },
+  "keywords": [
+    "github-action",
+    "buddy",
+    "bdy",
+    "cli",
+    "setup",
+    "ci-cd"
+  ],
+  "author": "Marcel Gańczarczyk <marcel.ganczarczyk@buddy.works>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buddy/setup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/buddy/setup/issues"
+  },
+  "homepage": "https://github.com/buddy/setup#readme",
+  "packageManager": "pnpm@10.11.0",
+  "dependencies": {
+    "@actions/core": "1.11.1",
+    "@actions/exec": "1.1.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.8",
+    "@types/node": "24",
+    "esbuild": "0.25.9",
+    "typescript": "5.9.2"
+  }
+}
