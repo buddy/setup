@@ -1,5 +1,7 @@
 import { info, warning } from '@actions/core'
 import { exec } from '@actions/exec'
+import { arch } from 'node:os'
+import { SUPPORTED_ARCHITECTURE } from '@/const/architecture'
 import type { IOutputs } from '@/types/outputs'
 import { getInputs } from '@/utils/action/getInputs'
 import { fetchLatestVersion } from '@/utils/version/fetchLatestVersion'
@@ -75,14 +77,38 @@ async function getBdyPath(): Promise<string> {
 }
 
 /**
+ * Detects and validates the system architecture
+ * @returns Supported architecture enum value
+ * @throws Error if architecture is not supported
+ */
+function getArchitecture(): SUPPORTED_ARCHITECTURE {
+  const ARCH_MAP = new Map<string, SUPPORTED_ARCHITECTURE>([
+    ['x64', SUPPORTED_ARCHITECTURE.X64],
+    ['arm64', SUPPORTED_ARCHITECTURE.ARM64],
+  ])
+
+  const systemArch = arch()
+  const supportedArch = ARCH_MAP.get(systemArch)
+
+  if (!supportedArch) {
+    throw new Error(
+      `Unsupported architecture: ${systemArch}. Only x64 and arm64 are supported.`,
+    )
+  }
+
+  return supportedArch
+}
+
+/**
  * Installs BDY CLI using the download method (curl + tar)
  * @param env - The environment channel (e.g., 'prod')
  * @param version - The version to install
  */
 async function installViaDownload(env: string, version: string): Promise<void> {
-  info(`Installing BDY CLI ${version} via download method...`)
+  const architecture = getArchitecture()
+  info(`Installing BDY CLI ${version} via download method for ${architecture}...`)
 
-  const url = `https://es.buddy.works/bdy/${env}/${version}/linux-x64.tar.gz`
+  const url = `https://es.buddy.works/bdy/${env}/${version}/linux-${architecture}.tar.gz`
 
   try {
     await exec('curl', ['-fL', url, '-o', 'bdy.tar.gz'])

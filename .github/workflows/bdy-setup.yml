@@ -270,3 +270,75 @@ jobs:
             echo "❌ Action should have failed but succeeded"
             exit 1
           fi
+
+  test-architecture-x64:
+    name: Test x64 architecture (download method, prod)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@main
+
+      - name: Verify architecture
+        run: |
+          ARCH=$(uname -m)
+          echo "System architecture: $ARCH"
+          if [ "$ARCH" = "x86_64" ]; then
+            echo "✅ Running on x64 architecture as expected"
+          else
+            echo "❌ Expected x64 but got $ARCH"
+            exit 1
+          fi
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-architecture-arm64:
+    name: Test arm64 architecture (download method, prod)
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI
+        uses: buddy/setup@main
+
+      - name: Verify architecture
+        run: |
+          ARCH=$(uname -m)
+          echo "System architecture: $ARCH"
+          if [ "$ARCH" = "aarch64" ]; then
+            echo "✅ Running on arm64 architecture as expected"
+          else
+            echo "❌ Expected arm64 (aarch64) but got $ARCH"
+            exit 1
+          fi
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
