@@ -217,12 +217,30 @@ async function installViaNpm(env: string): Promise<void> {
 }
 
 /**
+ * Validates that the installation method is supported for the current platform
+ * @param method - The installation method to validate
+ * @param platformInfo - The detected platform information
+ * @throws Error if the installation method is not supported on the current platform
+ */
+function validateInstallationMethod(method: string, platformInfo: PlatformInfo): void {
+  if (method === 'apt' && platformInfo.platform !== SUPPORTED_PLATFORM.LINUX) {
+    throw new Error(
+      `APT installation method is only supported on Linux. Current platform: ${platformInfo.platform}`,
+    )
+  }
+}
+
+/**
  * Main setup function that installs BDY CLI if needed
  * @returns Promise containing the BDY CLI version and path
  * @throws Error if installation fails
  */
 export async function setup(): Promise<IOutputs> {
   const inputs = getInputs()
+  const platformInfo = getPlatformInfo()
+
+  // Validate installation method is supported for this platform
+  validateInstallationMethod(inputs.installation_method, platformInfo)
 
   const isInstalled = await isBdyInstalled()
 
