@@ -1,7 +1,7 @@
-import { arch } from 'node:os'
+import { arch, platform } from 'node:os'
 import { info, warning } from '@actions/core'
 import { exec } from '@actions/exec'
-import { SUPPORTED_ARCHITECTURE } from '@/const/architecture'
+import { type PlatformInfo, SUPPORTED_ARCHITECTURE, SUPPORTED_PLATFORM } from '@/const/platform'
 import type { IOutputs } from '@/types/outputs'
 import { getInputs } from '@/utils/action/getInputs'
 import { fetchLatestVersion } from '@/utils/version/fetchLatestVersion'
@@ -77,47 +77,97 @@ async function getBdyPath(): Promise<string> {
 }
 
 /**
- * Detects and validates the system architecture
- * @returns Supported architecture enum value
- * @throws Error if architecture is not supported
+ * Detects and validates the system platform and architecture
+ * @returns Platform information including OS, architecture, and download details
+ * @throws Error if the platform/architecture combination is not supported
  */
-function getArchitecture(): SUPPORTED_ARCHITECTURE {
+function getPlatformInfo(): PlatformInfo {
+  const PLATFORM_MAP = new Map<string, SUPPORTED_PLATFORM>([
+    ['linux', SUPPORTED_PLATFORM.LINUX],
+    ['darwin', SUPPORTED_PLATFORM.DARWIN],
+    ['win32', SUPPORTED_PLATFORM.WIN32],
+  ])
+
   const ARCH_MAP = new Map<string, SUPPORTED_ARCHITECTURE>([
     ['x64', SUPPORTED_ARCHITECTURE.X64],
     ['arm64', SUPPORTED_ARCHITECTURE.ARM64],
   ])
 
+  const systemPlatform = platform()
   const systemArch = arch()
-  const supportedArch = ARCH_MAP.get(systemArch)
 
-  if (!supportedArch) {
+  const detectedPlatform = PLATFORM_MAP.get(systemPlatform)
+  const detectedArch = ARCH_MAP.get(systemArch)
+
+  if (!detectedPlatform) {
+    throw new Error(
+      `Unsupported platform: ${systemPlatform}. Only linux, darwin, and win32 are supported.`,
+    )
+  }
+
+  if (!detectedArch) {
     throw new Error(`Unsupported architecture: ${systemArch}. Only x64 and arm64 are supported.`)
   }
 
-  return supportedArch
+  // Validate platform + architecture combinations
+  if (
+    detectedPlatform === SUPPORTED_PLATFORM.DARWIN &&
+    detectedArch === SUPPORTED_ARCHITECTURE.X64
+  ) {
+    throw new Error('macOS x64 is not supported. Only darwin-arm64 binaries are available.')
+  }
+
+  if (
+    detectedPlatform === SUPPORTED_PLATFORM.WIN32 &&
+    detectedArch === SUPPORTED_ARCHITECTURE.ARM64
+  ) {
+    throw new Error('Windows ARM64 is not supported. Only win-x64 binaries are available.')
+  }
+
+  // Determine file extension and download prefix
+  const fileExtension = detectedPlatform === SUPPORTED_PLATFORM.WIN32 ? '.zip' : '.tar.gz'
+  const platformName = detectedPlatform === SUPPORTED_PLATFORM.WIN32 ? 'win' : detectedPlatform
+  const downloadPrefix = `${platformName}-${detectedArch}`
+
+  return {
+    platform: detectedPlatform,
+    architecture: detectedArch,
+    downloadPrefix,
+    fileExtension,
+  }
 }
 
 /**
- * Installs BDY CLI using the download method (curl + tar)
+ * Installs BDY CLI using the download method
  * @param env - The environment channel (e.g., 'prod')
  * @param version - The version to install
  */
 async function installViaDownload(env: string, version: string): Promise<void> {
-  const architecture = getArchitecture()
-  info(`Installing BDY CLI ${version} via download method for ${architecture}...`)
+  const platformInfo = getPlatformInfo()
+  info(`Installing BDY CLI ${version} via download method for ${platformInfo.downloadPrefix}...`)
 
-  const url = `https://es.buddy.works/bdy/${env}/${version}/linux-${architecture}.tar.gz`
+  const fileName = `bdy${platformInfo.fileExtension}`
+  const url = `https://es.buddy.works/bdy/${env}/${version}/${platformInfo.downloadPrefix}${platformInfo.fileExtension}`
+
+  if (platformInfo.platform === SUPPORTED_PLATFORM.DARWIN) {
+    await exec('sudo', ['mkdir', '-p', '-m', '755', '/usr/local/bin'])
+  }
 
   try {
-    await exec('curl', ['-fL', url, '-o', 'bdy.tar.gz'])
+    await exec('curl', ['-fL', url, '-o', fileName])
   } catch {
     throw new Error(
       `Failed to download BDY CLI ${version} from ${env} channel. The version may not exist or the URL is incorrect: ${url}`,
     )
   }
 
-  await exec('sudo', ['tar', '-zxf', 'bdy.tar.gz', '-C', '/usr/local/bin/'])
-  await exec('rm', ['bdy.tar.gz'])
+  if (platformInfo.platform === SUPPORTED_PLATFORM.WIN32) {
+    await exec('tar', ['-xf', fileName])
+  } else {
+    await exec('sudo', ['tar', '-zxf', fileName, '-C', '/usr/local/bin/'])
+  }
+
+  await exec('rm', [fileName])
 
   info('BDY CLI installed successfully via download method')
 }
