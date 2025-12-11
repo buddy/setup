@@ -1,6 +1,6 @@
+import { arch } from 'node:os'
 import { info, warning } from '@actions/core'
 import { exec } from '@actions/exec'
-import { arch } from 'node:os'
 import { SUPPORTED_ARCHITECTURE } from '@/const/architecture'
 import type { IOutputs } from '@/types/outputs'
 import { getInputs } from '@/utils/action/getInputs'
@@ -91,9 +91,7 @@ function getArchitecture(): SUPPORTED_ARCHITECTURE {
   const supportedArch = ARCH_MAP.get(systemArch)
 
   if (!supportedArch) {
-    throw new Error(
-      `Unsupported architecture: ${systemArch}. Only x64 and arm64 are supported.`,
-    )
+    throw new Error(`Unsupported architecture: ${systemArch}. Only x64 and arm64 are supported.`)
   }
 
   return supportedArch
