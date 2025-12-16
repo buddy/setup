@@ -86,6 +86,14 @@ The action exports the following environment variables for use in subsequent ste
 
 ## Installation Methods
 
+### Platform Support
+
+| Platform | Architecture | Installation Methods |
+| -------- | ------------ | -------------------- |
+| Windows  | x64          | download, npm        |
+| macOS    | arm64        | download, npm        |
+| Linux    | x64, arm64   | apt, download, npm   |
+
 ### Download (Default)
 Downloads the BDY CLI binary directly from the official repository and extracts it to `/usr/local/bin/`. Supports all environments and specific versions.
 
