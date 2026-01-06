@@ -271,6 +271,60 @@ jobs:
             exit 1
           fi
 
+  test-custom-env:
+    name: Test custom env (dev-package) via NPM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI with custom env
+        uses: buddy/setup@main
+        with:
+          env: 'dev-package'
+          installation_method: 'npm'
+
+      - name: Check BDY version
+        run: |
+          echo "BDY CLI installed at: $BDY_PATH"
+          echo "BDY CLI version: $BDY_VERSION"
+
+      - name: Verify installation
+        run: |
+          if command -v bdy &> /dev/null; then
+            echo "✅ BDY CLI is installed successfully from custom env"
+          else
+            echo "❌ BDY CLI installation failed"
+            exit 1
+          fi
+
+  test-invalid-env:
+    name: Test non-existent env (should fail)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup BDY CLI with invalid env
+        id: setup-invalid-env
+        continue-on-error: true
+        uses: buddy/setup@main
+        with:
+          env: 'non-existent-env-12345'
+
+      - name: Verify error handling
+        run: |
+          if [ "${{ steps.setup-invalid-env.outcome }}" == "failure" ]; then
+            echo "✅ Action correctly failed with non-existent env"
+            exit 0
+          else
+            echo "❌ Action should have failed but succeeded"
+            exit 1
+          fi
+
   test-architecture-x64:
     name: Test x64 architecture (download method, prod)
     runs-on: ubuntu-latest
