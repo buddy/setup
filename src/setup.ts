@@ -258,14 +258,13 @@ export async function setup(): Promise<IOutputs> {
     warning(`BDY CLI is already installed (${version}). Reinstalling...`)
   }
 
-  // Fetch the latest version if not provided
-  const version = inputs.version || (await fetchLatestVersion(inputs.env))
-  info(`Using BDY CLI version: ${version} from ${inputs.env} channel`)
-
   switch (inputs.installation_method) {
-    case 'download':
+    case 'download': {
+      const version = inputs.version || (await fetchLatestVersion(inputs.env))
+      info(`Using BDY CLI version: ${version} from ${inputs.env} channel`)
       await installViaDownload(inputs.env, version)
       break
+    }
     case 'apt':
       await installViaApt(inputs.env)
       break
