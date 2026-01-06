@@ -13,7 +13,7 @@ export enum InstallationMethod {
 }
 
 export interface IInputs {
-  env: BdyEnvironment
+  env: string
   version?: string
   installation_method: InstallationMethod
   skip_if_installed: boolean

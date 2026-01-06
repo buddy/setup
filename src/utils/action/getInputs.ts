@@ -1,4 +1,4 @@
-import { getBooleanInput, getInput } from '@actions/core'
+import { getBooleanInput, getInput, warning } from '@actions/core'
 import { BdyEnvironment, type IInputs, InstallationMethod } from '@/types/inputs'
 
 /**
@@ -13,7 +13,7 @@ export function getInputs(): IInputs {
 
   const validEnvs = Object.values(BdyEnvironment)
   if (!validEnvs.includes(env as BdyEnvironment)) {
-    throw new Error(`Invalid env: ${env}. Must be one of: ${validEnvs.join(', ')}`)
+    warning(`Non-standard env: ${env}. Standard environments are: ${validEnvs.join(', ')}`)
   }
 
   const validMethods = Object.values(InstallationMethod)
@@ -24,7 +24,7 @@ export function getInputs(): IInputs {
   }
 
   return {
-    env: env as BdyEnvironment,
+    env,
     version,
     installation_method: installation_method as InstallationMethod,
     skip_if_installed,
