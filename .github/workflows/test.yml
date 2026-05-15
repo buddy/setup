@@ -1,0 +1,99 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  test-download:
+    name: download method
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install BDY CLI (download)
+        id: setup
+        uses: ./
+      - name: Verify bdy
+        shell: bash
+        run: |
+          test -n "$BDY_VERSION" || { echo "BDY_VERSION empty"; exit 1; }
+          test -n "$BDY_PATH" || { echo "BDY_PATH empty"; exit 1; }
+          echo "bdy_version output: ${{ steps.setup.outputs.bdy_version }}"
+          echo "bdy_path output:    ${{ steps.setup.outputs.bdy_path }}"
+          bdy version
+
+  test-npm-pinned:
+    name: npm method (pinned version)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install BDY CLI (pinned version via npm)
+        uses: ./
+        with:
+          installation_method: 'npm'
+          env: 'dev'
+          version: '1.16.4'
+      - name: Verify BDY_VERSION matches expected
+        run: |
+          test "$BDY_VERSION" = "1.16.4-dev" || { echo "expected 1.16.4-dev got $BDY_VERSION"; exit 1; }
+          bdy version
+
+  test-apt:
+    name: apt method (linux only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install BDY CLI (apt)
+        uses: ./
+        with:
+          installation_method: 'apt'
+      - name: Print bdy version
+        run: bdy version
+
+  test-npm:
+    name: npm method
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install BDY CLI (npm)
+        uses: ./
+        with:
+          installation_method: 'npm'
+      - name: Print bdy version
+        shell: bash
+        run: bdy version
+
+  test-skip-if-installed:
+    name: skip_if_installed honoured
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: First install (1.16.4-dev)
+        id: first
+        uses: ./
+        with:
+          installation_method: 'npm'
+          env: 'dev'
+          version: '1.16.4'
+      - name: Second install (1.16.2-beta) should skip
+        id: second
+        uses: ./
+        with:
+          installation_method: 'npm'
+          env: 'beta'
+          version: '1.16.2'
+      - name: Verify second run kept the first install
+        run: |
+          test "${{ steps.second.outputs.bdy_version }}" = "1.16.4-dev" || {
+            echo "skip_if_installed=true should have kept 1.16.4-dev, got ${{ steps.second.outputs.bdy_version }}"
+            exit 1
+          }

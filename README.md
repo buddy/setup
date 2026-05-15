@@ -1,32 +1,35 @@
 # Buddy Setup Action
 
-GitHub Action for installing BDY CLI for Buddy CI/CD platform.
+GitHub Action for installing BDY CLI for the Buddy CI/CD platform.
 
 ## Features
 
 - Automatically installs BDY CLI if not already installed
-- Fetches latest version from specified environment channel (prod/dev)
-- Supports multiple installation methods (download, APT, NPM)
+- Fetches latest version from the specified environment channel (e.g. prod, dev)
+- Supports multiple installation methods (`download`, `apt`, `npm`)
 - Configurable version selection or auto-fetch latest
 - Skip installation if already installed
 
 ## Usage
 
-### Basic Usage (Latest from prod)
+### Basic (latest from prod)
+
 ```yaml
 - name: Setup BDY CLI
   uses: buddy/setup@v1
 ```
 
-### Specify Environment Channel
+### Pick a channel
+
 ```yaml
 - name: Setup BDY CLI
   uses: buddy/setup@v1
   with:
-    env: 'dev'  # or 'prod' (default)
+    env: 'dev'
 ```
 
-### Specify Exact Version
+### Pin a version
+
 ```yaml
 - name: Setup BDY CLI
   uses: buddy/setup@v1
@@ -35,104 +38,76 @@ GitHub Action for installing BDY CLI for Buddy CI/CD platform.
     env: 'prod'
 ```
 
-### All Options
+### All options
+
 ```yaml
 - name: Setup BDY CLI
   uses: buddy/setup@v1
   with:
-    # Environment channel (default: prod)
-    env: 'prod'
-
-    # Specific version (optional, fetches latest if not specified)
-    version: '1.16.4'
-
-    # Installation method: download, apt, or npm (default: download)
-    installation_method: 'download'
-
-    # Skip installation if BDY CLI is already installed (default: true)
-    skip_if_installed: 'true'
+    env: 'prod' # default: prod
+    version: '1.16.4' # default: latest from env
+    installation_method: 'download' # download | apt | npm; default: download
+    skip_if_installed: 'true' # default: true
 ```
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `env` | Environment channel (`prod`, `dev`, etc.) | No | `prod` |
-| `version` | BDY CLI version to install. If not specified, fetches latest from the specified channel | No | Auto-fetched |
-| `installation_method` | Installation method (`download`, `apt`, or `npm`) | No | `download` |
-| `skip_if_installed` | Skip installation if BDY CLI is already installed | No | `true` |
+| Input                 | Description                                                                   | Required | Default    |
+| --------------------- | ----------------------------------------------------------------------------- | -------- | ---------- |
+| `env`                 | Environment channel (`prod`, `dev`, `beta`, `stage`, `master`)                | No       | `prod`     |
+| `version`             | BDY CLI version to install. If not specified, fetches latest from the channel | No       | (latest)   |
+| `installation_method` | Installation method (`download`, `apt`, or `npm`)                             | No       | `download` |
+| `skip_if_installed`   | Skip installation if BDY CLI is already installed                             | No       | `true`     |
 
 ## Outputs
 
-| Output | Description |
-|--------|-------------|
+| Output        | Description                   |
+| ------------- | ----------------------------- |
 | `bdy_version` | The installed BDY CLI version |
-| `bdy_path` | Path to the BDY CLI binary |
+| `bdy_path`    | Path to the BDY CLI binary    |
 
-## Environment Variables
+## Environment variables
 
-The action exports the following environment variables for use in subsequent steps:
+The action exports the following env vars for subsequent steps:
 
-| Variable | Description |
-|----------|-------------|
+| Variable      | Description                   |
+| ------------- | ----------------------------- |
 | `BDY_VERSION` | The installed BDY CLI version |
-| `BDY_PATH` | Path to the BDY CLI binary |
+| `BDY_PATH`    | Path to the BDY CLI binary    |
 
-**Example usage:**
 ```yaml
 - name: Check installed version
   run: echo "Installed BDY CLI version: $BDY_VERSION"
 ```
 
-## Installation Methods
+## Platform support
 
-### Platform Support
+| Platform | Architecture | Installation methods     |
+| -------- | ------------ | ------------------------ |
+| Linux    | x64, arm64   | `download`, `apt`, `npm` |
+| macOS    | arm64        | `download`, `npm`        |
+| Windows  | x64          | `download`, `npm`        |
 
-| Platform | Architecture | Installation Methods |
-| -------- | ------------ | -------------------- |
-| Windows  | x64          | download, npm        |
-| macOS    | arm64        | download, npm        |
-| Linux    | x64, arm64   | apt, download, npm   |
+### Download (default)
 
-### Download (Default)
-Downloads the BDY CLI binary directly from the official repository and extracts it to `/usr/local/bin/`. Supports all environments and specific versions.
-
-```yaml
-- uses: buddy/setup@v1
-  with:
-    installation_method: 'download'
-    env: 'prod'
-    version: '1.16.4'  # optional
-```
+Downloads the BDY CLI binary from `https://es.buddy.works/bdy/<env>/<version>/...` and extracts it to `/usr/local/bin/` (Linux/macOS) or `~/.bdy/` (Windows).
 
 ### APT
-Installs BDY CLI using the APT package manager (Ubuntu/Debian). Uses the Buddy APT repository for the specified environment.
 
-```yaml
-- uses: buddy/setup@v1
-  with:
-    installation_method: 'apt'
-    env: 'prod'
-```
+Linux only. Adds the Buddy APT repository (with GPG key) for the chosen `env` channel and installs `bdy` via `apt-get`.
 
 ### NPM
-Installs BDY CLI using NPM. For `prod` environment, installs latest stable. For other environments, uses NPM dist-tags.
+
+Installs globally via npm. Resolution:
+
+- `version` set, `env: prod` → `npm i -g bdy@<version>` (e.g. `bdy@1.22.25`)
+- `version` set, other `env` → `npm i -g bdy@<version>-<env>` (e.g. `bdy@1.22.42-dev`, `bdy@1.22.42-beta`)
+- no `version`, `env: prod` → `npm i -g bdy` (latest)
+- no `version`, other `env` → `npm i -g bdy@<env>` (latest of that channel tag)
+
+## Example
 
 ```yaml
-- uses: buddy/setup@v1
-  with:
-    installation_method: 'npm'
-    env: 'dev'  # installs bdy@dev
-```
-
-## Example Workflows
-
-### Production Deployment
-```yaml
-name: Deploy with Buddy
-
-on: [push, workflow_dispatch]
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -142,41 +117,15 @@ jobs:
       - name: Setup BDY CLI
         uses: buddy/setup@v1
 
-      - name: Verify installation
-        run: |
-          echo "BDY CLI version: $BDY_VERSION"
-          echo "BDY CLI path: $BDY_PATH"
-
       - name: Login to Buddy
         uses: buddy/login@v1
         with:
           token: ${{ secrets.BUDDY_TOKEN }}
 
-      - name: Run deployment
-        run: bdy deploy
-```
-
-### Development Testing
-```yaml
-name: Test with Dev CLI
-
-on: [pull_request, workflow_dispatch]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup BDY CLI (dev channel)
-        uses: buddy/setup@v1
+      - name: Run pipeline
+        uses: buddy/run-pipeline@v1
         with:
-          env: 'dev'
-
-      - name: Run tests
-        run: bdy test
+          workspace: my-workspace
+          project: my-project
+          identifier: deploy
 ```
-
-## License
-
-MIT License - see [LICENSE.md](LICENSE.md) for details.
